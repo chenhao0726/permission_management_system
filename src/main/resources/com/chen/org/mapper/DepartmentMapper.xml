@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.chen.org.mapper.DepartmentMapper">
+    <insert id="insert" parameterType="Department" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        insert into t_department(
+            name,
+            intro,
+            create_time,
+            update_time,
+            manager_id,
+            parent_id,
+            path,
+            state
+        ) value (#{name}, #{intro}, #{create_time}, #{update_time}, #{manager.id}, #{parent.id}, #{path}, #{state})
+    </insert>
+    <update id="update" parameterType="Department">
+        update t_department set
+            name=#{name},
+            intro=#{intro},
+            create_time=#{create_time},
+            update_time=#{update_time},
+            manager_id=#{manager.id},
+            parent_id=#{parent.id},
+            path=#{path},
+            state=#{state}
+        where id=#{id}
+
+    </update>
+    <delete id="deleteById">
+        delete from t_department where id=#{id}
+    </delete>
+    <!--批量删除数据-->
+    <delete id="bachDelete">
+        delete
+        from t_department
+        where id in
+            <foreach collection="list" item="id" open="(" close=")" separator=",">
+                #{id}
+            </foreach>
+    </delete>
+    <!--通过id查询数据-->
+    <select id="selectById" resultType="Department">
+        SELECT
+            d.*,
+            e.id eid,
+            e.username eusername,
+            p.id pid,
+            p.`name` pname
+        FROM
+            t_department d
+                LEFT JOIN t_employee e ON d.manager_id = e.id
+                LEFT JOIN t_department p ON d.parent_id = p.id
+        WHERE d.id=#{id}
+    </select>
+    <!--查询所有-->
+    <select id="selectAll" resultMap="BaseDepartment">
+        SELECT
+            d.*,
+            e.id eid,
+            e.username eusername,
+            p.id pid,
+            p.`name` pname
+        FROM
+            t_department d
+                LEFT JOIN t_employee e ON d.manager_id = e.id
+                LEFT JOIN t_department p ON d.parent_id = p.id
+    </select>
+    <!--统计数据-->
+    <select id="queryTotal" resultType="java.lang.Long">
+        select count(*)
+        from t_department d
+             LEFT JOIN t_employee e ON d.manager_id = e.id
+             LEFT JOIN t_department p ON d.parent_id = p.id
+        <include refid="whereSql"/>
+    </select>
+    <select id="queryAllPage" resultMap="BaseDepartment">
+        SELECT
+            d.*,
+            e.id eid,
+            e.username eusername,
+            p.id pid,
+            p.`name` pname
+        FROM
+            t_department d
+                LEFT JOIN t_employee e ON d.manager_id = e.id
+                LEFT JOIN t_department p ON d.parent_id = p.id
+        <include refid="whereSql"/>
+        limit #{start},#{pageSize}
+    </select>
+    <select id="deptTree" resultMap="BaseDepartment">
+        SELECT
+            d.*,
+            td.id AS tdid,
+            td.`name` AS tdname,
+            c.id AS cid,
+            c.`name` AS cname
+        FROM
+            t_department d
+                LEFT JOIN t_department td ON d.id = td.parent_id
+                LEFT JOIN t_department c ON td.id = c.parent_id
+        WHERE
+            d.parent_id IS NULL
+    </select>
+    <sql id="whereSql">
+        <where>
+            <if test="keyword != null and keyword !=''">
+                d.name like concat('%',#{keyword},'%') or d.intro like concat('%',#{keyword},'%')
+            </if>
+        </where>
+    </sql>
+    <resultMap id="BaseDepartment" type="Department">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="intro" column="intro"/>
+        <result property="create_time" column="create_time"/>
+        <result property="update_time" column="update_time"/>
+        <result property="manager_id" column="manager_id"/>
+        <result property="parent_id" column="parent_id"/>
+        <result property="path" column="path"/>
+        <result property="state" column="state"/>
+        <association property="manager" javaType="Employee">
+            <id property="id" column="eid"/>
+            <result property="username" column="eusername"/>
+        </association>
+        <association property="parent" javaType="Department" fetchType="lazy">
+            <id property="id" column="pid"/>
+            <result property="name" column="pname"/>
+        </association>
+        <collection property="children" ofType="Department">
+            <id property="id" column="tdid"/>
+            <result property="name" column="tdname"/>
+            <collection property="children" ofType="Department">
+                <id property="id" column="cid"/>
+                <result property="name" column="cname"/>
+            </collection>
+        </collection>
+    </resultMap>
+
+</mapper>

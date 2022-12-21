@@ -7,10 +7,12 @@ spring:
     url: jdbc:mysql:///permission_system
     username: root
     password: 123456
-    driver-class-name: com.mysql.jdbc.Driver
-  main:
-    lazy-initialization:
+    driver-class-name: com.mysql.cj.jdbc.Driver
 mybatis:
   # 配置别名包
-  type-aliases-package: com.chen.domain
+  type-aliases-package: com.chen.org.domain,com.chen.permission.domain
   # mapper-locations:
+
+chen:
+  permission:
+    scan-package: com.chen.org.controller,com.chen.permission.controller

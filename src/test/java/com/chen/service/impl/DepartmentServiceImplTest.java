@@ -1,8 +1,8 @@
 package com.chen.service.impl;
 
 import com.chen.PermissionAppStarter;
-import com.chen.domain.Department;
-import com.chen.service.IDepartmentService;
+import com.chen.org.domain.Department;
+import com.chen.org.service.IDepartmentService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;

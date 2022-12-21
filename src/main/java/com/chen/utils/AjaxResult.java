@@ -1,8 +1,11 @@
-package com.chen.util;
+package com.chen.utils;
 
 public class AjaxResult {
+    // 是否操作成功 默认值true 成功
     private Boolean success = true;
+    // 提示信息，默认提示成功
     private String message = "操作成功";
+    //返回的数据
     private Object data;
 
     public static AjaxResult me() {
