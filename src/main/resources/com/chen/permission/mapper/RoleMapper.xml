@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.chen.permission.mapper.RoleMapper">
+    <insert id="insertRole" parameterType="Role">
+        insert into t_role( name, sn)
+        VALUE (#{name},#{sn})
+    </insert>
+    <!--再权限和角色的中间表添加为角色添加的权限信息-->
+    <insert id="saveRolePermission">
+        insert into t_role_permission(role_id, permission_sn)
+        values
+        <foreach collection="rolePerSns" item="sn" separator=",">
+            (#{roleId},#{sn})
+        </foreach>
+    </insert>
+    <!--根据id获取角色权限-->
+    <select id="selectByIdRolePer" resultType="java.lang.String">
+        select permission_sn from t_role_permission where role_id = #{roleId}
+    </select>
+    <!--根据角色id删除当前角色的权限信息-->
+    <delete id="deleteByIdRolePermission">
+        delete from t_role_permission where role_id = #{id}
+    </delete>
+    <!--批量删除角色时也删除角色权限-->
+    <delete id="batchDeleteRolePermission">
+        delete from t_role_permission where role_id in
+        <foreach collection="list" item="role_id" open="(" close=")" separator=",">
+            #{role_id}
+        </foreach>
+    </delete>
+    <update id="updateRole" parameterType="Role">
+        update t_role set name=#{name},sn=#{sn} where id=#{id}
+    </update>
+    <delete id="deleteByIdRole">
+        delete from t_role where id=#{id}
+    </delete>
+    <delete id="batchDeleteRole">
+        delete from t_role where id in
+        <foreach collection="list" item="id" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+    </delete>
+    <select id="selectByIdRole" resultType="Role">
+        select id,name,sn from t_role where id=#{id}
+    </select>
+    <select id="queryAllRole" resultType="Role">
+        select id,name,sn from t_role
+    </select>
+
+    <select id="totalRole" resultType="java.lang.Long">
+        select count(*) from t_role
+        <include refid="keywordSql"/>
+    </select>
+    <select id="queryAllPageRole" resultType="Role">
+        select id,name,sn from t_role
+        <include refid="keywordSql"/>
+        limit #{start},#{pageSize}
+    </select>
+    <sql id="keywordSql">
+        <where>
+            <if test="keyword != null and keyword != ''">
+                and ('name' like concat('%',#{keyword},'%'))
+                or (sn like concat('%',#{keyword},'%'))
+            </if>
+        </where>
+    </sql>
+</mapper>

@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.chen.permission.mapper.PermissionMapper">
+    <insert id="loadInsert" parameterType="Permission" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        insert into t_permission(
+            name, url, descs, sn, parent_id
+        ) value (
+            #{name},
+            #{url},
+            #{descs},
+            #{sn},
+            #{parent.id}
+            )
+    </insert>
+    <delete id="deleteAll">
+        delete from t_permission
+    </delete>
+    <select id="loadTotal" resultType="java.lang.Long">
+        select count(*)
+        from t_permission c
+                 left join t_permission tp on c.parent_id = tp.id
+        <include refid="whereSql"/>
+
+    </select>
+    <sql id="whereSql">
+        <where>
+            <if test="keyword != null and keyword != ''">
+                and (c.name like concat('%',#{keyword},'%'))
+                or (c.url like concat('%',#{keyword},'%'))
+                or (c.sn like concat('%',#{keyword},'%'))
+                or (c.descs like concat('%',#{keyword},'%'))
+            </if>
+        </where>
+    </sql>
+    <select id="loadAll" resultMap="BasePermission">
+        select c.*, tp.id tpid, tp.name tpname
+        from t_permission c
+                 left join t_permission tp on c.parent_id = tp.id
+        <include refid="whereSql"/>
+        limit #{start},#{pageSize}
+    </select>
+    <select id="permissionTree" resultMap="BasePermission">
+        SELECT
+            c.*,
+            tp.id tpid,
+            tp.`name` tpname,
+            tp.sn tpsn
+        FROM
+            t_permission c
+                LEFT JOIN t_permission tp ON c.id = tp.parent_id
+        WHERE
+            c.parent_id IS NULL
+    </select>
+    <select id="loadPermissionSnsByLoginUserId" resultType="java.lang.String">
+        SELECT
+            rp.permission_sn
+        FROM
+            t_employee_role er
+                LEFT JOIN t_role_permission rp ON er.role_id = rp.role_id
+        where er.employee_id = #{loginUserId}
+    </select>
+    <resultMap id="BasePermission" type="Permission">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="url" column="url"/>
+        <result property="sn" column="sn"/>
+        <result property="descs" column="descs"/>
+        <association property="parent" javaType="Permission">
+            <id property="id" column="tpid"/>
+            <result property="name" column="tpname"/>
+        </association>
+        <collection property="children" ofType="Permission">
+            <id property="id" column="tpid"/>
+            <result property="name" column="tpname"/>
+            <result property="sn" column="tpsn"/>
+        </collection>
+    </resultMap>
+</mapper>

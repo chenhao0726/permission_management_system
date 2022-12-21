@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.chen.org.mapper.EmployeeMapper">
+    <insert id="insertEmp">
+        insert into t_employee(
+            username, password, email, headImage, age, department_id
+        ) value (#{username},#{password},#{email},#{headImage},#{age},#{dept.id})
+    </insert>
+    <insert id="insertEmpRole">
+        insert into t_employee_role (employee_id, role_id) VALUE (#{empId},#{roleId})
+    </insert>
+    <update id="updateEmpById">
+        update t_employee set
+            username=#{username},
+            password=#{password},
+            email=#{email},
+            headImage=#{headImage},
+            age=#{age},
+            department_id=#{dept.id}
+        where id=#{id}
+    </update>
+    <update id="updateEmpRole">
+        update t_employee_role set role_id = #{roleId} where employee_id=#{empId}
+    </update>
+    <delete id="deleteEmpById">
+        delete from t_employee where id=#{id}
+    </delete>
+    <!--批量删除-->
+    <delete id="bachDelete">
+        delete from t_employee where id in
+        <foreach collection="list" item="id" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+    </delete>
+    <select id="selectById" resultMap="BaseEmployee">
+        select e.*, td.id did, td.name dname
+        from t_employee e
+                 left join t_department td on e.department_id = td.id
+        where e.id=#{id}
+    </select>
+    <select id="queryAll" resultMap="BaseEmployee">
+        select e.*, td.id did, td.name dname
+        from t_employee e
+                 left join t_department td on e.department_id = td.id
+    </select>
+    <!--统计数据-->
+    <select id="queryTotal" resultType="java.lang.Long">
+        select count(*)
+        from t_employee e
+                 left join t_department td on e.department_id = td.id
+        <include refid="whereSql"/>
+    </select>
+    <!--分页查询数据-->
+    <!--因为#{}通过get方法去获取值所以#{start}会去找getStart()方法获取起始数据-->
+    <select id="queryData" resultMap="BaseEmployee">
+        SELECT
+            e.*,
+            td.id did,
+            td.`name` dname,
+            r.id rid,
+            r.`name` rname,
+            r.sn rsn
+        FROM
+            t_employee e
+            LEFT JOIN t_department td ON e.department_id = td.id
+            LEFT JOIN t_employee_role er ON e.id = er.employee_id
+            LEFT JOIN t_role r ON er.role_id = r.id
+        <include refid="whereSql"/>
+        limit #{start},#{pageSize}
+    </select>
+    <!--登录查询用户信息-->
+    <select id="getByUsername" resultType="Employee">
+        select * from t_employee where username=#{username}
+    </select>
+    <sql id="whereSql">
+        <where>
+            <if test="keyword != null and keyword != ''">
+                e.username like concat('%',#{keyword},'%')
+            </if>
+        </where>
+    </sql>
+    <!--关联映射-->
+    <resultMap id="BaseEmployee" type="Employee">
+        <id property="id" column="id"/>
+        <result property="username" column="username"/>
+        <result property="password" column="password"/>
+        <result property="email" column="email"/>
+        <result property="headImage" column="headImage"/>
+        <result property="age" column="age"/>
+        <result property="department_id" column="department_id"/>
+        <association property="dept" javaType="Department">
+            <id property="id" column="did"/>
+            <result property="name" column="dname"/>
+        </association>
+        <association property="role" javaType="Role">
+            <id property="id" column="rid"/>
+            <result property="name" column="rname"/>
+            <result property="sn" column="rsn"/>
+        </association>
+    </resultMap>
+</mapper>
